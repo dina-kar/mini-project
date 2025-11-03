@@ -114,6 +114,30 @@ body {
   border: 1px solid #333;
 }
 
+/* Navigation */
+.nav {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.nav-link {
+  padding: 0.5rem 0.875rem;
+  border-radius: 6px;
+  color: #bbb;
+  text-decoration: none;
+  border: 1px solid #2a2a2a;
+}
+
+.nav-link:hover {
+  background: #151515;
+}
+
+.nav-link.active {
+  color: #fff;
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.12);
+}
+
 /* Loading */
 .loading {
   display: flex;

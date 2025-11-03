@@ -566,10 +566,23 @@ void sendToServer() {
     return;
   }
   
-  Serial.println("\n[WebSocket] → Sending encrypted data to server...");
+  Serial.println("\n[WebSocket] → Sending data to server...");
+  Serial.printf("[WebSocket] Block counter: %d\n", blockCounter - 1);
   
-  // Send encrypted data (verified or software-generated)
-  webSocket.sendBIN(encryptedData, BLOCK_SIZE);
+  // Create a packet: [4-byte counter][64-byte encrypted data]
+  uint8_t packet[68];
   
-  Serial.println("[WebSocket] ✓ Data sent successfully");
+  // Pack counter as little-endian 32-bit integer
+  packet[0] = (blockCounter - 1) & 0xFF;
+  packet[1] = ((blockCounter - 1) >> 8) & 0xFF;
+  packet[2] = ((blockCounter - 1) >> 16) & 0xFF;
+  packet[3] = ((blockCounter - 1) >> 24) & 0xFF;
+  
+  // Copy encrypted data
+  memcpy(packet + 4, encryptedData, BLOCK_SIZE);
+  
+  // Send packet with counter + encrypted data
+  webSocket.sendBIN(packet, 68);
+  
+  Serial.println("[WebSocket] ✓ Data sent successfully (4-byte counter + 64-byte encrypted data)");
 }

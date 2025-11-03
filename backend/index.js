@@ -190,21 +190,28 @@ wss.on('connection', (ws, req) => {
   ws.on('message', (data) => {
     try {
       // Check if it's binary data (encrypted sensor data from ESP32)
-      if (Buffer.isBuffer(data) && data.length === BLOCK_SIZE) {
+      // New format: [4-byte counter][64-byte encrypted data] = 68 bytes total
+      if (Buffer.isBuffer(data) && data.length === 68) {
         console.log('\n╔══════════════════════════════════════════════╗');
         console.log('║   ENCRYPTED DATA RECEIVED FROM ESP32        ║');
         console.log('╚══════════════════════════════════════════════╝');
         
-        console.log(`[Data] Received ${data.length} bytes of encrypted data`);
-        console.log(`[Data] First 16 bytes: ${data.slice(0, 16).toString('hex')}`);
+        console.log(`[Data] Received ${data.length} bytes (4-byte counter + 64-byte encrypted data)`);
         
-        // Decrypt data using ChaCha20
+        // Extract counter (little-endian 32-bit integer)
+        const receivedCounter = data.readUInt32LE(0);
+        console.log(`[Data] Block counter from ESP32: ${receivedCounter}`);
+        
+        // Extract encrypted data (bytes 4-67)
+        const encryptedData = data.slice(4, 68);
+        console.log(`[Data] First 16 bytes of ciphertext: ${encryptedData.slice(0, 16).toString('hex')}`);
+        
+        // Decrypt data using ChaCha20 with the received counter
         console.log('[Decrypt] Decrypting with ChaCha20...');
-        const decryptedData = chacha20Decrypt(data, key, nonce, blockCounter);
-        blockCounter++;
+        const decryptedData = chacha20Decrypt(encryptedData, key, nonce, receivedCounter);
         
         console.log('[Decrypt] ✓ Decryption complete');
-        console.log(`[Decrypt] Counter: ${blockCounter}`);
+        console.log(`[Decrypt] Used counter: ${receivedCounter}`);
         console.log(`[Decrypt] First 23 bytes (hex): ${decryptedData.slice(0, 23).toString('hex')}`);
         
         // Parse sensor data
@@ -225,9 +232,9 @@ wss.on('connection', (ws, req) => {
             type: 'sensorData',
             data: sensorData,
             encrypted: {
-              ciphertext: data.toString('hex'),
+              ciphertext: encryptedData.toString('hex'),
               plaintext: decryptedData.slice(0, 23).toString('hex'),
-              blockCounter: blockCounter - 1
+              blockCounter: receivedCounter
             }
           });
           
