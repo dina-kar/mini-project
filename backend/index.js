@@ -92,7 +92,7 @@ function parseSensorData(buffer) {
     throw new Error('Invalid buffer size');
   }
   
-  // Parse the packed structure
+  // Parse the packed structure (Little Endian)
   const timestamp = buffer.readUInt32LE(0);
   const heartRate = buffer.readUInt16LE(4);
   const heartRateAvg = buffer.readUInt16LE(6);
@@ -209,7 +209,12 @@ wss.on('connection', (ws, req) => {
           // Broadcast to all connected web clients
           const message = JSON.stringify({
             type: 'sensorData',
-            data: sensorData
+            data: sensorData,
+            encrypted: {
+              ciphertext: data.toString('hex'),
+              plaintext: decryptedData.slice(0, 23).toString('hex'),
+              blockCounter: blockCounter - 1
+            }
           });
           
           let broadcastCount = 0;

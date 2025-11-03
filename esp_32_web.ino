@@ -34,7 +34,7 @@ const char* ssid = "Redmi";           // Replace with your WiFi SSID
 const char* password = "summa2004";   // Replace with your WiFi password
 
 // ==================== WebSocket Configuration ====================
-const char* ws_host = "192.168.1.100";  // Replace with your server IP
+const char* ws_host = "mini-project-backend-k3qb.onrender.com";  // Replace with your server IP
 const int ws_port = 443;
 const char* ws_path = "/";
 
@@ -293,26 +293,32 @@ void readSensorData() {
     return;
   }
   
-  // Manual beat detection
+  // Manual beat detection - improved algorithm
   static uint32_t lastIR = 0;
   static uint32_t beforeLastIR = 0;
   static bool risingEdge = false;
   
+  // Detect peak (current value higher than previous, and previous was higher than before)
   if (irValue > lastIR && lastIR > beforeLastIR) {
     risingEdge = true;
   }
   
+  // Detect when peak passes (value starts decreasing)
   if (risingEdge && irValue < lastIR) {
+    // Beat detected!
     long currentTime = millis();
     long timeSinceLastBeat = currentTime - lastBeat;
     
+    // Valid beat interval (between 300ms and 2000ms = 30-200 BPM)
     if (timeSinceLastBeat > 300 && timeSinceLastBeat < 2000) {
       beatsPerMinute = 60000.0 / timeSinceLastBeat;
       
+      // Filter realistic heart rates
       if (beatsPerMinute >= 40 && beatsPerMinute <= 200) {
         rates[rateSpot++] = (byte)beatsPerMinute;
         rateSpot %= RATE_SIZE;
         
+        // Calculate average
         beatAvg = 0;
         for (byte x = 0; x < RATE_SIZE; x++) {
           beatAvg += rates[x];
