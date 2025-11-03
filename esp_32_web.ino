@@ -30,12 +30,12 @@
 #include "MAX30105.h"
 
 // ==================== WiFi Configuration ====================
-const char* ssid = "YOUR_WIFI_SSID";           // Replace with your WiFi SSID
-const char* password = "YOUR_WIFI_PASSWORD";   // Replace with your WiFi password
+const char* ssid = "Redmi";           // Replace with your WiFi SSID
+const char* password = "summa2004";   // Replace with your WiFi password
 
 // ==================== WebSocket Configuration ====================
 const char* ws_host = "192.168.1.100";  // Replace with your server IP
-const int ws_port = 8080;
+const int ws_port = 443;
 const char* ws_path = "/";
 
 WebSocketsClient webSocket;
@@ -192,9 +192,9 @@ void setupWebSocket() {
   }
   
   Serial.println("\n[WebSocket] Initializing...");
-  Serial.printf("[WebSocket] Server: ws://%s:%d%s\n", ws_host, ws_port, ws_path);
-  
-  webSocket.begin(ws_host, ws_port, ws_path);
+  Serial.printf("[WebSocket] Server: wss://%s:%d%s\n", ws_host, ws_port, ws_path);
+
+  webSocket.beginSSL(ws_host, ws_port, ws_path);
   webSocket.onEvent(webSocketEvent);
   webSocket.setReconnectInterval(5000);
   
