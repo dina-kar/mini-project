@@ -52,6 +52,75 @@ MAX30105 particleSensor;
 // ==================== Data Structures ====================
 #define BLOCK_SIZE 64
 
+// ChaCha20 Software Implementation (for verification)
+#define ROTL32(v, n) (((v) << (n)) | ((v) >> (32 - (n))))
+
+#define CHACHA_QUARTERROUND(a, b, c, d) \
+  a += b; d ^= a; d = ROTL32(d, 16); \
+  c += d; b ^= c; b = ROTL32(b, 12); \
+  a += b; d ^= a; d = ROTL32(d, 8); \
+  c += d; b ^= c; b = ROTL32(b, 7);
+
+void chacha20_block(uint32_t out[16], const uint32_t in[16]) {
+  uint32_t x[16];
+  
+  for (int i = 0; i < 16; i++) {
+    x[i] = in[i];
+  }
+  
+  for (int i = 0; i < 10; i++) {
+    CHACHA_QUARTERROUND(x[0], x[4], x[8],  x[12]);
+    CHACHA_QUARTERROUND(x[1], x[5], x[9],  x[13]);
+    CHACHA_QUARTERROUND(x[2], x[6], x[10], x[14]);
+    CHACHA_QUARTERROUND(x[3], x[7], x[11], x[15]);
+    
+    CHACHA_QUARTERROUND(x[0], x[5], x[10], x[15]);
+    CHACHA_QUARTERROUND(x[1], x[6], x[11], x[12]);
+    CHACHA_QUARTERROUND(x[2], x[7], x[8],  x[13]);
+    CHACHA_QUARTERROUND(x[3], x[4], x[9],  x[14]);
+  }
+  
+  for (int i = 0; i < 16; i++) {
+    out[i] = x[i] + in[i];
+  }
+}
+
+void chacha20_encrypt(uint8_t* output, const uint8_t* input, size_t len,
+                      const uint8_t key[32], const uint8_t nonce[8], uint32_t counter) {
+  uint32_t state[16];
+  uint32_t keystream[16];
+  
+  state[0] = 0x61707865;
+  state[1] = 0x3320646e;
+  state[2] = 0x79622d32;
+  state[3] = 0x6b206574;
+  
+  for (int i = 0; i < 8; i++) {
+    state[4 + i] = ((uint32_t)key[i*4 + 0] << 0) |
+                   ((uint32_t)key[i*4 + 1] << 8) |
+                   ((uint32_t)key[i*4 + 2] << 16) |
+                   ((uint32_t)key[i*4 + 3] << 24);
+  }
+  
+  state[12] = counter;
+  state[13] = 0;
+  
+  state[14] = ((uint32_t)nonce[0] << 0) |
+              ((uint32_t)nonce[1] << 8) |
+              ((uint32_t)nonce[2] << 16) |
+              ((uint32_t)nonce[3] << 24);
+  state[15] = ((uint32_t)nonce[4] << 0) |
+              ((uint32_t)nonce[5] << 8) |
+              ((uint32_t)nonce[6] << 16) |
+              ((uint32_t)nonce[7] << 24);
+  
+  chacha20_block(keystream, state);
+  
+  for (size_t i = 0; i < len && i < 64; i++) {
+    output[i] = input[i] ^ ((uint8_t*)keystream)[i];
+  }
+}
+
 // Sensor data packet structure (unencrypted)
 struct SensorData {
   uint32_t timestamp;      // 4 bytes
@@ -69,6 +138,12 @@ struct SensorData {
 SensorData currentSensorData;
 uint8_t encryptedData[BLOCK_SIZE];
 uint8_t plainData[BLOCK_SIZE];
+uint8_t expectedCiphertext[BLOCK_SIZE];  // For verification
+
+// ChaCha20 key and nonce (matching backend)
+uint8_t chacha_key[32] = {0};   // All-zero key
+uint8_t chacha_nonce[8] = {0};  // All-zero nonce
+uint32_t blockCounter = 0;      // Encryption block counter
 
 // ==================== Heart Rate Detection ====================
 const byte RATE_SIZE = 4;
@@ -426,12 +501,58 @@ void receiveFromFPGA() {
     waitingForFPGA = false;
     Serial.println("[FPGA] ✓ Received 64 bytes encrypted data");
     
-    // Print first 16 bytes as preview
-    Serial.print("[FPGA] Encrypted (preview): ");
+    // Compute expected ciphertext using software ChaCha20
+    chacha20_encrypt(expectedCiphertext, plainData, BLOCK_SIZE, chacha_key, chacha_nonce, blockCounter);
+    
+    // Verify FPGA encryption against software
+    Serial.println("\n╔══════════════════════════════════════════════╗");
+    Serial.println("║     FPGA ENCRYPTION VERIFICATION            ║");
+    Serial.println("╠══════════════════════════════════════════════╣");
+    
+    bool match = true;
+    int mismatchCount = 0;
+    
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+      if (encryptedData[i] != expectedCiphertext[i]) {
+        if (mismatchCount == 0) {
+          Serial.println("║ ✗ MISMATCH DETECTED!                        ║");
+          Serial.println("╠══════════════════════════════════════════════╣");
+          Serial.println("║ Byte | FPGA | Expected                      ║");
+        }
+        Serial.printf("║ %4d | 0x%02X | 0x%02X                         ║\n", i, encryptedData[i], expectedCiphertext[i]);
+        match = false;
+        mismatchCount++;
+        
+        if (mismatchCount >= 5) {
+          Serial.printf("║ ... and %d more mismatches                  ║\n", BLOCK_SIZE - i - 1);
+          break;
+        }
+      }
+    }
+    
+    if (match) {
+      Serial.println("║ ✓ PERFECT MATCH!                            ║");
+      Serial.println("║   FPGA encryption is CORRECT                ║");
+      Serial.println("╚══════════════════════════════════════════════╝");
+    } else {
+      Serial.printf("║ ✗ VERIFICATION FAILED (%d/%d bytes wrong)    ║\n", mismatchCount, BLOCK_SIZE);
+      Serial.println("║   FPGA encryption is INCORRECT!             ║");
+      Serial.println("║   Using SOFTWARE encryption instead...      ║");
+      Serial.println("╚══════════════════════════════════════════════╝");
+      
+      // Use software-encrypted data instead
+      memcpy(encryptedData, expectedCiphertext, BLOCK_SIZE);
+      Serial.println("[FPGA] ⚠️  Using software ChaCha20 (FPGA failed verification)");
+    }
+    
+    // Print preview
+    Serial.print("\n[FPGA] Encrypted (first 16 bytes): ");
     for (int i = 0; i < 16; i++) {
       Serial.printf("%02X ", encryptedData[i]);
     }
     Serial.println("...");
+    
+    blockCounter++;  // Increment for next encryption
     
     // Send to server
     sendToServer();
@@ -447,7 +568,7 @@ void sendToServer() {
   
   Serial.println("\n[WebSocket] → Sending encrypted data to server...");
   
-  // Send binary data
+  // Send encrypted data (verified or software-generated)
   webSocket.sendBIN(encryptedData, BLOCK_SIZE);
   
   Serial.println("[WebSocket] ✓ Data sent successfully");

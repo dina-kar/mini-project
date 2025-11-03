@@ -92,7 +92,8 @@ function parseSensorData(buffer) {
     throw new Error('Invalid buffer size');
   }
   
-  // Parse the packed structure (Little Endian)
+  // Parse the packed structure
+  // ESP32 uses little-endian for multi-byte values
   const timestamp = buffer.readUInt32LE(0);
   const heartRate = buffer.readUInt16LE(4);
   const heartRateAvg = buffer.readUInt16LE(6);
@@ -102,6 +103,18 @@ function parseSensorData(buffer) {
   const redValue = buffer.readUInt32LE(16);
   const perfusionIndex = buffer.readUInt16LE(20);
   const signalQuality = buffer.readUInt8(22);
+  
+  // Debug log raw values
+  console.log('[Debug] Raw values:');
+  console.log(`  timestamp: ${timestamp}`);
+  console.log(`  heartRate: ${heartRate}`);
+  console.log(`  heartRateAvg: ${heartRateAvg}`);
+  console.log(`  spo2: ${spo2}`);
+  console.log(`  temperature: ${temperature} (raw), ${temperature / 100.0} (converted)`);
+  console.log(`  irValue: ${irValue}`);
+  console.log(`  redValue: ${redValue}`);
+  console.log(`  perfusionIndex: ${perfusionIndex} (raw), ${perfusionIndex / 100.0} (converted)`);
+  console.log(`  signalQuality: ${signalQuality}`);
   
   return {
     timestamp,
@@ -192,6 +205,7 @@ wss.on('connection', (ws, req) => {
         
         console.log('[Decrypt] ✓ Decryption complete');
         console.log(`[Decrypt] Counter: ${blockCounter}`);
+        console.log(`[Decrypt] First 23 bytes (hex): ${decryptedData.slice(0, 23).toString('hex')}`);
         
         // Parse sensor data
         try {
