@@ -1,0 +1,322 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.app {
+  min-height: 100vh;
+  background: #0f0f0f;
+  color: #fff;
+}
+
+/* Header */
+.header {
+  background: #1a1a1a;
+  border-bottom: 1px solid #2a2a2a;
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.title h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.title p {
+  font-size: 0.875rem;
+  color: #888;
+}
+
+.connection {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.connection input {
+  padding: 0.625rem 1rem;
+  background: #0f0f0f;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.875rem;
+  min-width: 250px;
+  transition: border-color 0.2s;
+}
+
+.connection input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.connection input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.connection button {
+  padding: 0.625rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.connection button.connect {
+  background: #3b82f6;
+  color: white;
+}
+
+.connection button.connect:hover {
+  background: #2563eb;
+}
+
+.connection button.disconnect {
+  background: #ef4444;
+  color: white;
+}
+
+.connection button.disconnect:hover {
+  background: #dc2626;
+}
+
+.status {
+  padding: 0.625rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status.on {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status.off {
+  background: rgba(136, 136, 136, 0.1);
+  color: #888;
+  border: 1px solid #333;
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+}
+
+.spinner {
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading p {
+  color: #888;
+  font-size: 0.875rem;
+}
+
+/* Content */
+.content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Primary Metrics */
+.primary-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.metric {
+  background: #1a1a1a;
+  border: 2px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.metric:hover {
+  border-color: #333;
+  transform: translateY(-2px);
+}
+
+.metric .label {
+  font-size: 0.875rem;
+  color: #888;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.metric .value {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.metric .value span {
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: #888;
+  margin-left: 0.5rem;
+}
+
+.metric.good {
+  border-color: #22c55e;
+}
+
+.metric.good .value {
+  color: #22c55e;
+}
+
+.metric.warning {
+  border-color: #f59e0b;
+}
+
+.metric.warning .value {
+  color: #f59e0b;
+}
+
+.metric.danger {
+  border-color: #ef4444;
+}
+
+.metric.danger .value {
+  color: #ef4444;
+}
+
+/* Chart Section */
+.chart-section {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.chart-section h3 {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #888;
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Secondary Metrics */
+.secondary-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.info-card {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.info-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #2a2a2a;
+  border-radius: 3px;
+  margin-top: 0.75rem;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #22c55e 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+  }
+
+  .connection {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .connection input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .connection button,
+  .status {
+    width: 100%;
+  }
+
+  .content {
+    padding: 1rem;
+  }
+
+  .primary-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .metric .value {
+    font-size: 2.5rem;
+  }
+
+  .secondary-metrics {
+    grid-template-columns: 1fr;
+  }
+}

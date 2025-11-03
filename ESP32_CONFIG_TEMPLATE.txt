@@ -1,0 +1,107 @@
+/*
+ * ESP32 Configuration Template
+ * 
+ * Copy this section into esp_32_web.ino and update with your values
+ */
+
+// ==================== WiFi Configuration ====================
+// Replace these with your actual WiFi network credentials
+const char* ssid = "YOUR_WIFI_SSID";           // Your WiFi network name
+const char* password = "YOUR_WIFI_PASSWORD";   // Your WiFi password
+
+// ==================== WebSocket Configuration ====================
+// Replace with your server's IP address
+// To find your server IP:
+//   - Linux/Mac: Run 'ifconfig' or 'ip addr'
+//   - Windows: Run 'ipconfig'
+//   - Look for your local network IP (usually 192.168.x.x or 10.0.x.x)
+const char* ws_host = "192.168.1.100";  // Your server IP address
+const int ws_port = 8080;               // Server port (default: 8080)
+const char* ws_path = "/";              // WebSocket path (default: /)
+
+// ==================== Example Configurations ====================
+
+// Example 1: Home WiFi with local server
+// const char* ssid = "MyHomeWiFi";
+// const char* password = "MySecurePassword123";
+// const char* ws_host = "192.168.1.150";  // Your laptop/desktop IP
+
+// Example 2: Office WiFi with cloud server
+// const char* ssid = "OfficeNetwork";
+// const char* password = "OfficePass2024";
+// const char* ws_host = "myserver.example.com";
+
+// Example 3: Mobile hotspot
+// const char* ssid = "MyPhoneHotspot";
+// const char* password = "hotspot123";
+// const char* ws_host = "192.168.43.1";  // Typical mobile hotspot gateway
+
+// ==================== Optional Advanced Settings ====================
+
+// FPGA UART Configuration (only change if you modify hardware)
+// #define FPGA_RX_PIN 16
+// #define FPGA_TX_PIN 17
+// #define BAUD_RATE 115200
+
+// Sensor reading intervals (milliseconds)
+// const unsigned long SENSOR_INTERVAL = 20;    // Read sensor every 20ms
+// const unsigned long SEND_INTERVAL = 2000;    // Send data every 2 seconds
+
+// MAX30102 Sensor Configuration (only change if readings are poor)
+// byte ledBrightness = 50;   // LED brightness (0-255) - increase if signal is weak
+// byte sampleAverage = 4;     // Sample averaging (1, 2, 4, 8, 16, 32)
+// byte sampleRate = 100;      // Samples per second (50, 100, 200, 400, 800, 1000, 1600, 3200)
+// int pulseWidth = 411;       // Pulse width in microseconds (69, 118, 215, 411)
+
+// ==================== How to Find Your Server IP ====================
+/*
+ * Method 1: Command Line
+ *   Linux/Mac:
+ *     1. Open terminal
+ *     2. Run: ifconfig
+ *     3. Look for "inet" under your network interface (usually wlan0 or eth0)
+ *   
+ *   Windows:
+ *     1. Open Command Prompt
+ *     2. Run: ipconfig
+ *     3. Look for "IPv4 Address" under your network adapter
+ * 
+ * Method 2: When Starting Backend Server
+ *   The server will display available network interfaces when it starts
+ * 
+ * Method 3: Network Settings
+ *   Check your system's network settings panel
+ * 
+ * Common IP address ranges:
+ *   - 192.168.x.x  (most home routers)
+ *   - 10.0.x.x     (some routers)
+ *   - 172.16.x.x   (some networks)
+ */
+
+// ==================== Troubleshooting ====================
+/*
+ * WiFi won't connect:
+ *   - Verify SSID and password are correct
+ *   - Check if WiFi is 2.4GHz (ESP32 doesn't support 5GHz only networks)
+ *   - Ensure WiFi allows new devices to connect
+ *   - Try moving ESP32 closer to router
+ * 
+ * WebSocket won't connect:
+ *   - Verify server is running (check backend terminal)
+ *   - Ensure ws_host IP is correct
+ *   - Check firewall isn't blocking port 8080
+ *   - Verify ESP32 and server are on same network
+ *   - Try pinging server from another device
+ * 
+ * Sensor not detected:
+ *   - Check I2C connections (SDA=GPIO21, SCL=GPIO22)
+ *   - Verify 3.3V power is connected
+ *   - Ensure GND is connected
+ *   - Try different I2C pull-up resistors if available
+ * 
+ * FPGA communication issues:
+ *   - Check UART connections (TX→RX, RX→TX)
+ *   - Verify GND is connected
+ *   - Ensure baud rate matches FPGA (115200)
+ *   - Check FPGA is powered and programmed
+ */
